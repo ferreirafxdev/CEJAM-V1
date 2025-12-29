@@ -1,0 +1,14 @@
+{% extends "admin/change_form.html" %}
+
+{% block object-tools %}
+  {{ block.super }}
+
+  {% if original and original.status == "RASCUNHO" %}
+    <li>
+      <a class="button"
+         href="{% url 'admin:contratos_contrato_gerar_pdf' original.pk %}">
+        📄 Gerar Contrato em PDF
+      </a>
+    </li>
+  {% endif %}
+{% endblock %}
