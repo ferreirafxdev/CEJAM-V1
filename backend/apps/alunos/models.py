@@ -11,6 +11,7 @@ class Aluno(models.Model):
     class Status(models.TextChoices):
         ATIVO = "ATIVO", "Ativo"
         INATIVO = "INATIVO", "Inativo"
+        TRANCADO = "TRANCADO", "Trancado"
 
     nome_completo = models.CharField(max_length=200)
     cpf = models.CharField(
@@ -27,6 +28,13 @@ class Aluno(models.Model):
     responsavel = models.ForeignKey(
         "cadastros.Responsavel",
         on_delete=models.PROTECT,
+        related_name="alunos",
+        null=True,
+        blank=True,
+    )
+    plano_financeiro = models.ForeignKey(
+        "financeiro.PlanoEducacional",
+        on_delete=models.SET_NULL,
         related_name="alunos",
         null=True,
         blank=True,

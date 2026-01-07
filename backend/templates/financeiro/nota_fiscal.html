@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8" />
+    <title>Nota Fiscal {{ nf_numero }}</title>
+    <style>
+      :root {
+        color: #0f172a;
+        font-family: "Arial", sans-serif;
+      }
+
+      body {
+        margin: 24px;
+        font-size: 14px;
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 20px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+      }
+
+      h2 {
+        font-size: 13px;
+        text-transform: uppercase;
+        color: #475569;
+        letter-spacing: 1px;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+      }
+
+      .card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        background: #f8fafc;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 16px;
+        margin-top: 10px;
+      }
+
+      .label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #64748b;
+      }
+
+      .value {
+        font-weight: 600;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 8px 6px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      th {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #64748b;
+      }
+
+      .footer {
+        margin-top: 24px;
+        font-size: 12px;
+        color: #64748b;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div>
+        <h1>Nota Fiscal</h1>
+        <div class="label">Numero</div>
+        <div class="value">{{ nf_numero }}</div>
+      </div>
+      <div>
+        <div class="label">Emitida em</div>
+        <div class="value">{{ nf_emitida_em_formatada }}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Aluno</h2>
+      <div class="grid">
+        <div>
+          <div class="label">Nome</div>
+          <div class="value">{{ aluno.nome_completo }}</div>
+        </div>
+        <div>
+          <div class="label">CPF</div>
+          <div class="value">{{ aluno.cpf|default:"--" }}</div>
+        </div>
+        <div>
+          <div class="label">Turma</div>
+          <div class="value">{{ turma.nome|default:"--" }}</div>
+        </div>
+        <div>
+          <div class="label">Competencia</div>
+          <div class="value">{{ competencia_formatada }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Pagamento</h2>
+      <div class="grid">
+        <div>
+          <div class="label">Valor base</div>
+          <div class="value">R$ {{ valor_formatado }}</div>
+        </div>
+        <div>
+          <div class="label">Desconto</div>
+          <div class="value">R$ {{ desconto_formatado }}</div>
+        </div>
+        <div>
+          <div class="label">Multa</div>
+          <div class="value">R$ {{ multa_formatada }}</div>
+        </div>
+        <div>
+          <div class="label">Juros</div>
+          <div class="value">R$ {{ juros_formatado }}</div>
+        </div>
+        <div>
+          <div class="label">Juros (%)</div>
+          <div class="value">{{ juros_percent_formatado }}%</div>
+        </div>
+        <div>
+          <div class="label">Total</div>
+          <div class="value">R$ {{ total_formatado }}</div>
+        </div>
+        <div>
+          <div class="label">Valor pago</div>
+          <div class="value">R$ {{ valor_pago_formatado }}</div>
+        </div>
+        <div>
+          <div class="label">Status</div>
+          <div class="value">{{ status_label }}</div>
+        </div>
+        <div>
+          <div class="label">Forma de pagamento</div>
+          <div class="value">{{ forma_pagamento_label }}</div>
+        </div>
+        <div>
+          <div class="label">Data pagamento</div>
+          <div class="value">{{ pagamento_formatado }}</div>
+        </div>
+        <div>
+          <div class="label">Data vencimento</div>
+          <div class="value">{{ vencimento_formatado }}</div>
+        </div>
+        <div>
+          <div class="label">Registro</div>
+          <div class="value">{{ registro_formatado }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Documento gerado automaticamente pelo sistema CEJAM.
+    </div>
+  </body>
+</html>

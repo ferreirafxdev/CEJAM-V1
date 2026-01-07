@@ -26,6 +26,20 @@ ALLOWED_HOSTS = [h.strip() for h in raw_hosts.split(",") if h.strip()] or [
     "127.0.0.1",
 ]
 
+raw_cors = os.getenv("CORS_ALLOWED_ORIGINS", "")
+CORS_ALLOWED_ORIGINS = [o.strip() for o in raw_cors.split(",") if o.strip()]
+if not CORS_ALLOWED_ORIGINS and DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+    ]
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
+
 # =========================
 # APPS
 # =========================
@@ -38,8 +52,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     # Third-party
-    "corsheaders",
     "rest_framework",
+    "corsheaders",
 
     # Local apps
     "apps.accounts.apps.AccountsConfig",
@@ -57,8 +71,8 @@ INSTALLED_APPS = [
 # =========================
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",  # TEM QUE VIR ANTES DO Common
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -124,6 +138,20 @@ else:
     }
 
 # =========================
+# CACHE / SESSION
+# =========================
+CACHE_TTL = int(os.getenv("CACHE_TTL", "300"))
+DASHBOARD_CACHE_TTL = int(os.getenv("DASHBOARD_CACHE_TTL", "30"))
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "cejamsys-local-cache",
+        "TIMEOUT": CACHE_TTL,
+    }
+}
+
+# =========================
 # AUTH / PASSWORDS
 # =========================
 AUTH_PASSWORD_VALIDATORS = [
@@ -152,27 +180,6 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # =========================
-# CORS / CSRF
-# =========================
-CORS_ALLOW_ALL_ORIGINS = os.getenv(
-    "CORS_ALLOW_ALL_ORIGINS", ""
-).lower() in {"1", "true", "yes"}
-
-raw_cors = os.getenv("CORS_ALLOWED_ORIGINS", "")
-CORS_ALLOWED_ORIGINS = [o.strip() for o in raw_cors.split(",") if o.strip()]
-
-raw_csrf = os.getenv("CSRF_TRUSTED_ORIGINS", "")
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in raw_csrf.split(",") if o.strip()]
-
-from corsheaders.defaults import default_headers
-
-CORS_ALLOW_HEADERS = list(default_headers) + [
-    "authorization",
-]
-
-CORS_ALLOW_CREDENTIALS = True
-
-# =========================
 # DJANGO REST FRAMEWORK
 # =========================
 REST_FRAMEWORK = {
@@ -194,9 +201,3 @@ REST_FRAMEWORK = {
 # DEFAULT PK
 # =========================
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-
-print(">>> SETTINGS CARREGADO:", __file__)
-print(">>> TEMPLATES NO LOAD:", TEMPLATES)
-print("DEBUG =", DEBUG)
-print("CORS_ALLOWED_ORIGINS =", CORS_ALLOWED_ORIGINS)

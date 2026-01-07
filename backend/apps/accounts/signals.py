@@ -26,6 +26,7 @@ def create_default_groups(sender, **kwargs):
         "professores.Professor",
         "financeiro.PlanoEducacional",
         "financeiro.PagamentoAluno",
+        "financeiro.PagamentoAlunoHistorico",
         "financeiro.PagamentoProfessor",
         "financeiro.Despesa",
         "contratos.TemplateContrato",
@@ -38,6 +39,19 @@ def create_default_groups(sender, **kwargs):
     group_definitions = {
         "Administrador": {"models": all_models, "actions": ["add", "change", "delete", "view"]},
         "Diretor": {"models": domain_models, "actions": ["add", "change", "view"]},
+        "Financeiro": {
+            "models": [
+                "alunos.Aluno",
+                "cadastros.Responsavel",
+                "financeiro.PlanoEducacional",
+                "financeiro.PagamentoAluno",
+                "financeiro.PagamentoAlunoHistorico",
+                "financeiro.PagamentoProfessor",
+                "financeiro.Despesa",
+                "contratos.Contrato",
+            ],
+            "actions": ["add", "change", "view"],
+        },
         "Coordenacao": {
             "models": [
                 "alunos.Aluno",

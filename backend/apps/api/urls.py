@@ -8,9 +8,13 @@ from .views import (
     ContratoViewSet,
     DespesaViewSet,
     EscolaViewSet,
+    FinanceiroDashboardView,
+    FinanceiroRelatoriosView,
     GroupViewSet,
+    DashboardView,
     MeView,
     PagamentoAlunoViewSet,
+    PagamentoAlunoHistoricoViewSet,
     PagamentoProfessorViewSet,
     PermissionViewSet,
     PlanoEducacionalViewSet,
@@ -33,6 +37,11 @@ router.register(r"professores", ProfessorViewSet, basename="professores")
 router.register(r"turmas", TurmaViewSet, basename="turmas")
 router.register(r"planos", PlanoEducacionalViewSet, basename="planos")
 router.register(r"pagamentos-alunos", PagamentoAlunoViewSet, basename="pagamentos-alunos")
+router.register(
+    r"pagamentos-alunos-historico",
+    PagamentoAlunoHistoricoViewSet,
+    basename="pagamentos-alunos-historico",
+)
 router.register(r"pagamentos-professores", PagamentoProfessorViewSet, basename="pagamentos-professores")
 router.register(r"despesas", DespesaViewSet, basename="despesas")
 router.register(r"templates-contrato", TemplateContratoViewSet, basename="templates-contrato")
@@ -43,5 +52,8 @@ urlpatterns = [
     path("auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("auth/me/", MeView.as_view(), name="auth_me"),
+    path("dashboard/", DashboardView.as_view(), name="dashboard"),
+    path("financeiro/dashboard/", FinanceiroDashboardView.as_view(), name="financeiro_dashboard"),
+    path("financeiro/relatorios/", FinanceiroRelatoriosView.as_view(), name="financeiro_relatorios"),
     path("", include(router.urls)),
 ]

@@ -1,4 +1,6 @@
 import hashlib
+import os
+import shutil
 from types import SimpleNamespace
 
 from django.conf import settings
@@ -25,6 +27,64 @@ MESES_PT = [
     "novembro",
     "dezembro",
 ]
+
+
+def _resolve_wkhtmltopdf_path():
+    explicit = os.environ.get("WKHTMLTOPDF_PATH")
+    if explicit and os.path.isfile(explicit):
+        return explicit
+    candidates = [
+        r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe",
+        r"C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe",
+    ]
+    for path in candidates:
+        if os.path.isfile(path):
+            return path
+    return shutil.which("wkhtmltopdf")
+
+
+def _render_pdf_with_weasyprint(html, base_url=None):
+    try:
+        from weasyprint import HTML
+    except ImportError as exc:
+        raise RuntimeError(
+            "weasyprint nao instalado. Instale com: pip install weasyprint"
+        ) from exc
+    return HTML(string=html, base_url=base_url).write_pdf()
+
+
+def _render_pdf_with_wkhtmltopdf(html):
+    try:
+        import pdfkit
+    except ImportError as exc:
+        raise RuntimeError("pdfkit nao instalado. Instale com: pip install pdfkit") from exc
+    wkhtmltopdf = _resolve_wkhtmltopdf_path()
+    if not wkhtmltopdf:
+        raise RuntimeError(
+            "wkhtmltopdf nao encontrado. Instale o aplicativo ou defina WKHTMLTOPDF_PATH."
+        )
+    config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf)
+    options = {
+        "page-size": "A4",
+        "encoding": "UTF-8",
+        "enable-local-file-access": "",
+        "quiet": "",
+    }
+    return pdfkit.from_string(html, False, options=options, configuration=config)
+
+
+def _render_pdf(html, base_url=None):
+    engine = os.getenv("PDF_ENGINE", "weasyprint").strip().lower()
+    if engine == "weasyprint":
+        return _render_pdf_with_weasyprint(html, base_url=base_url)
+    if engine in {"wkhtmltopdf", "pdfkit"}:
+        return _render_pdf_with_wkhtmltopdf(html)
+    if engine == "auto":
+        try:
+            return _render_pdf_with_weasyprint(html, base_url=base_url)
+        except Exception:
+            return _render_pdf_with_wkhtmltopdf(html)
+    raise RuntimeError("PDF_ENGINE invalido. Use weasyprint, wkhtmltopdf ou auto.")
 
 
 def _format_currency(value):
@@ -146,13 +206,6 @@ def gerar_pdf_contrato(contrato, user=None):
     if contrato.status != Contrato.Status.RASCUNHO:
         raise ValueError("Contrato ja emitido ou cancelado.")
 
-    try:
-        from weasyprint import HTML
-    except ImportError as exc:
-        raise RuntimeError(
-            "WeasyPrint nao instalado. Remova a geracao de PDF ou instale a dependencia."
-        ) from exc
-
     if not contrato.numero:
         contrato.save()
 
@@ -168,7 +221,7 @@ def gerar_pdf_contrato(contrato, user=None):
         {"content": mark_safe(corpo), "css": css_text, "contrato": contrato},
     )
 
-    pdf_bytes = HTML(string=html, base_url=str(settings.BASE_DIR)).write_pdf()
+    pdf_bytes = _render_pdf(html, base_url=str(settings.BASE_DIR))
     pdf_hash = hashlib.sha256(pdf_bytes).hexdigest()
 
     filename = f"{contrato.numero}.pdf"

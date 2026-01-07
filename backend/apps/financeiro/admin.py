@@ -3,18 +3,51 @@ from decimal import Decimal
 from django.contrib import admin
 from django.db.models import Sum
 
-from .models import Despesa, PagamentoAluno, PagamentoProfessor, PlanoEducacional
+from .models import (
+    Despesa,
+    PagamentoAluno,
+    PagamentoAlunoHistorico,
+    PagamentoProfessor,
+    PlanoEducacional,
+)
 
 
 @admin.register(PlanoEducacional)
 class PlanoEducacionalAdmin(admin.ModelAdmin):
-    list_display = ("nome", "valor_mensalidade", "dia_vencimento", "duracao_meses")
+    list_display = (
+        "nome",
+        "valor_mensalidade",
+        "modelo_pagamento",
+        "dia_vencimento",
+        "duracao_meses",
+        "ativo",
+    )
     search_fields = ("nome",)
-    list_filter = ("dia_vencimento", "duracao_meses")
+    list_filter = ("modelo_pagamento", "dia_vencimento", "duracao_meses", "ativo")
     readonly_fields = ("created_at", "updated_at")
     fieldsets = (
-        ("Plano", {"fields": ("nome", "valor_mensalidade", "dia_vencimento", "duracao_meses")}),
-        ("Encargos", {"fields": ("taxa_matricula", "multa_percent", "juros_percent")}),
+        (
+            "Plano",
+            {
+                "fields": (
+                    "nome",
+                    "valor_mensalidade",
+                    "modelo_pagamento",
+                    "dia_vencimento",
+                    "duracao_meses",
+                    "forma_pagamento_padrao",
+                    "ativo",
+                )
+            },
+        ),
+        (
+            "Descontos e bolsas",
+            {"fields": ("desconto_percent", "bolsa_tipo", "bolsa_percent")},
+        ),
+        (
+            "Encargos",
+            {"fields": ("taxa_matricula", "multa_percent", "juros_percent", "juros_diario_percent")},
+        ),
         ("Auditoria", {"fields": ("created_at", "updated_at")}),
     )
 
@@ -26,6 +59,7 @@ class PagamentoAlunoAdmin(admin.ModelAdmin):
         "aluno",
         "competencia",
         "valor",
+        "valor_pago",
         "data_vencimento",
         "data_pagamento",
         "forma_pagamento",
@@ -40,14 +74,37 @@ class PagamentoAlunoAdmin(admin.ModelAdmin):
     date_hierarchy = "competencia"
     search_fields = ("aluno__nome_completo", "aluno__cpf")
     list_select_related = ("aluno", "aluno__turma")
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = (
+        "pagamento_registrado_em",
+        "nf_numero",
+        "nf_pdf",
+        "nf_emitida_em",
+        "created_at",
+        "updated_at",
+    )
     fieldsets = (
-        ("Pagamento", {"fields": ("aluno", "competencia", "valor", "multa")}),
+        (
+            "Pagamento",
+            {
+                "fields": (
+                    "aluno",
+                    "plano",
+                    "competencia",
+                    "valor",
+                    "valor_pago",
+                    "desconto",
+                    "multa",
+                    "juros",
+                    "dias_atraso",
+                )
+            },
+        ),
         (
             "Datas",
             {"fields": ("data_vencimento", "data_pagamento", "forma_pagamento", "status")},
         ),
         ("Observacoes", {"fields": ("observacoes",)}),
+        ("Nota fiscal", {"fields": ("nf_numero", "nf_pdf", "nf_emitida_em")}),
         ("Auditoria", {"fields": ("created_at", "updated_at")}),
     )
 
@@ -59,12 +116,20 @@ class PagamentoAlunoAdmin(admin.ModelAdmin):
             return response
 
         totals = queryset.filter(status=PagamentoAluno.Status.PAGO).aggregate(
-            total_recebido=Sum("valor"),
+            total_recebido=Sum("valor_pago"),
             total_multa=Sum("multa"),
         )
         response.context_data["total_recebido"] = totals["total_recebido"] or Decimal("0.00")
         response.context_data["total_multa"] = totals["total_multa"] or Decimal("0.00")
         return response
+
+
+@admin.register(PagamentoAlunoHistorico)
+class PagamentoAlunoHistoricoAdmin(admin.ModelAdmin):
+    list_display = ("pagamento", "acao", "status_anterior", "status_novo", "created_at")
+    list_filter = ("acao", "status_novo")
+    search_fields = ("pagamento__aluno__nome_completo", "pagamento__aluno__cpf")
+    readonly_fields = ("created_at",)
 
 
 @admin.register(PagamentoProfessor)

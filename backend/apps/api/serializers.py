@@ -4,7 +4,13 @@ from rest_framework import serializers
 from apps.alunos.models import Aluno
 from apps.cadastros.models import Escola, Responsavel
 from apps.contratos.models import Assinatura, Contrato, TemplateContrato
-from apps.financeiro.models import Despesa, PagamentoAluno, PagamentoProfessor, PlanoEducacional
+from apps.financeiro.models import (
+    Despesa,
+    PagamentoAluno,
+    PagamentoAlunoHistorico,
+    PagamentoProfessor,
+    PlanoEducacional,
+)
 from apps.professores.models import Professor
 from apps.turmas.models import Turma
 
@@ -85,10 +91,108 @@ class ResponsavelSerializer(serializers.ModelSerializer):
 class AlunoSerializer(serializers.ModelSerializer):
     responsavel_nome = serializers.CharField(source="responsavel.nome_completo", read_only=True)
     turma_nome = serializers.CharField(source="turma.nome", read_only=True)
+    plano_financeiro_nome = serializers.CharField(
+        source="plano_financeiro.nome",
+        read_only=True,
+    )
+    responsavel = serializers.PrimaryKeyRelatedField(
+        queryset=Responsavel.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+    turma = serializers.PrimaryKeyRelatedField(queryset=Turma.objects.all())
+    plano_financeiro = serializers.PrimaryKeyRelatedField(
+        queryset=PlanoEducacional.objects.all(),
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = Aluno
-        fields = "__all__"
+        fields = (
+            "id",
+            "nome_completo",
+            "cpf",
+            "data_nascimento",
+            "sexo",
+            "endereco",
+            "telefone",
+            "responsavel",
+            "nome_responsavel",
+            "telefone_responsavel",
+            "email_responsavel",
+            "status",
+            "data_matricula",
+            "numero_matricula",
+            "turma",
+            "plano_financeiro",
+            "valor_mensalidade",
+            "observacoes",
+            "historico_escolar",
+            "created_at",
+            "updated_at",
+            "responsavel_nome",
+            "turma_nome",
+            "plano_financeiro_nome",
+        )
+        read_only_fields = (
+            "created_at",
+            "updated_at",
+            "responsavel_nome",
+            "turma_nome",
+            "plano_financeiro_nome",
+        )
+        extra_kwargs = {
+            "nome_completo": {
+                "required": True,
+                "allow_blank": False,
+                "error_messages": {"required": "Informe o nome completo."},
+            },
+            "cpf": {"required": False, "allow_blank": True, "allow_null": True},
+            "data_nascimento": {
+                "required": True,
+                "error_messages": {"required": "Informe a data de nascimento."},
+            },
+            "sexo": {"required": True, "error_messages": {"required": "Informe o sexo."}},
+            "endereco": {
+                "required": True,
+                "allow_blank": False,
+                "error_messages": {"required": "Informe o endereco."},
+            },
+            "telefone": {
+                "required": True,
+                "allow_blank": False,
+                "error_messages": {"required": "Informe o telefone."},
+            },
+            "responsavel": {"required": False, "allow_null": True},
+            "nome_responsavel": {"required": False, "allow_blank": True},
+            "telefone_responsavel": {"required": False, "allow_blank": True},
+            "email_responsavel": {"required": False, "allow_blank": True},
+            "status": {"required": False, "default": Aluno.Status.ATIVO},
+            "data_matricula": {
+                "required": True,
+                "error_messages": {"required": "Informe a data de matricula."},
+            },
+            "numero_matricula": {"required": False, "allow_blank": True, "allow_null": True},
+            "turma": {"required": True, "error_messages": {"required": "Informe a turma."}},
+            "plano_financeiro": {"required": False, "allow_null": True},
+            "valor_mensalidade": {
+                "required": True,
+                "error_messages": {"required": "Informe o valor da mensalidade."},
+            },
+            "observacoes": {"required": False, "allow_blank": True},
+            "historico_escolar": {"required": False, "allow_blank": True},
+        }
+
+    def validate_cpf(self, value):
+        if value in {"", None}:
+            return None
+        return value
+
+    def validate_numero_matricula(self, value):
+        if value in {"", None}:
+            return None
+        return value
 
 
 class ProfessorSerializer(serializers.ModelSerializer):
@@ -117,9 +221,48 @@ class PlanoEducacionalSerializer(serializers.ModelSerializer):
 class PagamentoAlunoSerializer(serializers.ModelSerializer):
     aluno_nome = serializers.CharField(source="aluno.nome_completo", read_only=True)
     turma_nome = serializers.CharField(source="aluno.turma.nome", read_only=True)
+    plano_nome = serializers.SerializerMethodField()
+    nf_pdf_url = serializers.SerializerMethodField()
+    valor_total = serializers.SerializerMethodField()
 
     class Meta:
         model = PagamentoAluno
+        fields = "__all__"
+        read_only_fields = (
+            "desconto",
+            "multa",
+            "juros",
+            "dias_atraso",
+            "valor_total",
+            "nf_numero",
+            "nf_pdf",
+            "nf_emitida_em",
+            "pagamento_registrado_em",
+        )
+
+    def get_nf_pdf_url(self, obj):
+        request = self.context.get("request")
+        if obj.nf_pdf and request:
+            return request.build_absolute_uri(obj.nf_pdf.url)
+        if obj.nf_pdf:
+            return obj.nf_pdf.url
+        return ""
+
+    def get_plano_nome(self, obj):
+        if obj.plano:
+            return obj.plano.nome
+        aluno_plano = getattr(obj.aluno, "plano_financeiro", None)
+        if aluno_plano:
+            return aluno_plano.nome
+        return ""
+
+    def get_valor_total(self, obj):
+        return str(obj.valor_total)
+
+
+class PagamentoAlunoHistoricoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PagamentoAlunoHistorico
         fields = "__all__"
 
 
