@@ -18,7 +18,7 @@ services:
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
-        value: "https://SEU-BACKEND.onrender.com"
+        value: "https://cejam-v1-1.onrender.com/"
       - key: VITE_API_PREFIX
         value: "/api/v2"
     routes:
