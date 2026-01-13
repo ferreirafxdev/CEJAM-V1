@@ -37,7 +37,7 @@ const ACCESS_TOKEN_KEY = "cejam.accessToken";
 const REFRESH_TOKEN_KEY = "cejam.refreshToken";
 
 const baseUrl = (import.meta.env.VITE_API_URL ?? "").trim();
-const apiPrefix = (import.meta.env.VITE_API_PREFIX ?? "/api").trim();
+const apiPrefix = (import.meta.env.VITE_API_PREFIX ?? "/api/v2").trim();
 
 function buildUrl(path: string) {
   const normalizedBase = baseUrl.replace(/\/$/, "");

@@ -9,6 +9,7 @@ admin.site.index_title = "Administracao"
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/v2/", include(("apps.api.urls", "api"), namespace="v2")),
     path("api/", include("apps.api.urls")),
 ]
 
