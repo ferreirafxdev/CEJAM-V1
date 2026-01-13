@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: cejam-backend
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python backend/manage.py collectstatic --noinput
+    startCommand: gunicorn config.wsgi:application --chdir backend --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: USE_SQLITE
+        value: "0"
+  - type: static
+    name: cejam-frontend
+    env: static
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: "https://SEU-BACKEND.onrender.com"
+      - key: VITE_API_PREFIX
+        value: "/api/v2"
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import parse_qs, unquote, urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -129,8 +130,33 @@ TEMPLATES = [
 USE_SQLITE = os.getenv("USE_SQLITE", "").lower() in {"1", "true", "yes"}
 DB_NAME = os.getenv("DB_NAME")
 SQLITE_NAME = os.getenv("SQLITE_NAME", "db.sqlite3")
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 
-if USE_SQLITE or not DB_NAME:
+if DATABASE_URL:
+    parsed = urlparse(DATABASE_URL)
+    db_name = parsed.path.lstrip("/")
+    db_user = unquote(parsed.username or "")
+    db_password = unquote(parsed.password or "")
+    db_host = parsed.hostname or ""
+    db_port = parsed.port or 5432
+    options = {}
+    query = parse_qs(parsed.query)
+    if "sslmode" in query and query["sslmode"]:
+        options["sslmode"] = query["sslmode"][0]
+
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": db_name,
+            "USER": db_user,
+            "PASSWORD": db_password,
+            "HOST": db_host,
+            "PORT": str(db_port),
+            "CONN_MAX_AGE": 60,
+            **({"OPTIONS": options} if options else {}),
+        }
+    }
+elif USE_SQLITE or not DB_NAME:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
