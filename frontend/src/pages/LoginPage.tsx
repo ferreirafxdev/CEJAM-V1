@@ -1,4 +1,4 @@
-﻿import { useState, type FormEvent } from "react";
+﻿import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { KeyRound, User } from "lucide-react";
 
@@ -11,6 +11,17 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const { pushToast } = useToast();
   const navigate = useNavigate();
+  const apiPrefix = (import.meta.env.VITE_API_PREFIX ?? "/api/v2").trim();
+  const normalizedPrefix = apiPrefix.startsWith("/") ? apiPrefix : `/${apiPrefix}`;
+  const authEndpoint = `${normalizedPrefix.replace(/\/$/, "")}/auth/token/`;
+
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = "CEJAM - Login";
+    return () => {
+      document.title = previousTitle;
+    };
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -52,7 +63,7 @@ export function LoginPage() {
             </div>
             <div className="space-y-2 text-sm text-white/70">
               <p>API: `VITE_API_URL`</p>
-              <p>Autenticacao: JWT via /api/auth/token/</p>
+              <p>Autenticacao: JWT via {authEndpoint}</p>
             </div>
           </div>
 
