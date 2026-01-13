@@ -180,6 +180,25 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # =========================
+# SECURITY (PRODUCAO)
+# =========================
+def _env_bool(name, default="False"):
+    return os.getenv(name, default).lower() in {"1", "true", "yes"}
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = _env_bool("SECURE_SSL_REDIRECT", "True")
+    SESSION_COOKIE_SECURE = _env_bool("SESSION_COOKIE_SECURE", "True")
+    CSRF_COOKIE_SECURE = _env_bool("CSRF_COOKIE_SECURE", "True")
+    SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "3600"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = _env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", "True")
+    SECURE_HSTS_PRELOAD = _env_bool("SECURE_HSTS_PRELOAD", "True")
+    SECURE_REFERRER_POLICY = os.getenv("SECURE_REFERRER_POLICY", "same-origin")
+    SECURE_CONTENT_TYPE_NOSNIFF = _env_bool("SECURE_CONTENT_TYPE_NOSNIFF", "True")
+    X_FRAME_OPTIONS = os.getenv("X_FRAME_OPTIONS", "DENY")
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    USE_X_FORWARDED_HOST = _env_bool("USE_X_FORWARDED_HOST", "False")
+
+# =========================
 # DJANGO REST FRAMEWORK
 # =========================
 REST_FRAMEWORK = {
